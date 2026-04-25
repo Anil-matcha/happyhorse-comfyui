@@ -35,13 +35,13 @@
       "id": 3,
       "type": "HappyHorseImageToVideo",
       "pos": [440, 100],
-      "size": { "0": 420, "1": 270 },
+      "size": { "0": 420, "1": 280 },
       "flags": {},
       "order": 2,
       "mode": 0,
       "inputs": [
         { "name": "api_key", "type": "STRING", "link": 1 },
-        { "name": "image_1", "type": "IMAGE", "link": 4 }
+        { "name": "image", "type": "IMAGE", "link": 4 }
       ],
       "outputs": [
         { "name": "video_url", "type": "STRING", "links": [2], "slot_index": 0 },
@@ -50,10 +50,9 @@
       ],
       "properties": { "Node name for S&R": "HappyHorseImageToVideo" },
       "widgets_values": [
-        "@image1 comes alive with gentle motion, cinematic lighting, 1080p",
         "16:9",
-        10,
-        "1080p"
+        5,
+        "Comes alive with gentle motion, soft ambient sound, cinematic lighting"
       ]
     },
     {
@@ -78,7 +77,7 @@
     {
       "id": 5,
       "type": "PreviewImage",
-      "pos": [440, 430],
+      "pos": [440, 460],
       "size": { "0": 320, "1": 280 },
       "flags": {},
       "order": 4,

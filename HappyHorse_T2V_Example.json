@@ -20,7 +20,7 @@
       "id": 2,
       "type": "HappyHorseTextToVideo",
       "pos": [440, 100],
-      "size": { "0": 420, "1": 250 },
+      "size": { "0": 420, "1": 230 },
       "flags": {},
       "order": 1,
       "mode": 0,
@@ -34,10 +34,9 @@
       ],
       "properties": { "Node name for S&R": "HappyHorseTextToVideo" },
       "widgets_values": [
-        "A cinematic aerial shot of a coastal city at golden hour, waves crashing against cliffs, birds flying",
+        "A cinematic aerial shot of a coastal city at golden hour, waves crashing against cliffs, birds flying, gentle ambient ocean sounds",
         "16:9",
-        10,
-        "1080p"
+        5
       ]
     },
     {
