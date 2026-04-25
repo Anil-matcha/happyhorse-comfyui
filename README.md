@@ -1,7 +1,7 @@
 # HappyHorse 1.0 ComfyUI Nodes
 
 > **ComfyUI custom nodes for HappyHorse 1.0** — Alibaba's #1 ranked AI video generation model (1392 Elo I2V, 1333 Elo T2V on Artificial Analysis).
-> Generate native 1080p HD videos directly inside ComfyUI using the [muapi.ai](https://muapi.ai) API.
+> Generate 1080p (or cheaper 720p) videos directly inside ComfyUI using the [muapi.ai](https://muapi.ai) API.
 > Prefer raw Python? See the companion [HappyHorse 1.0 API wrapper](https://github.com/Anil-matcha/Awesome-HappyHorse-1.0-API-and-Prompt).
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
@@ -16,6 +16,7 @@ HappyHorse 1.0 is Alibaba's state-of-the-art AI video generation model, built by
 
 - **#1 Ranked** — 1333 Elo T2V, 1392 Elo I2V
 - **Native 1080p HD** — full HD output without upscaling, powered by a 15B-parameter 40-layer Transformer
+- **720p option** — same model, ~half the cost, available on every node via the `resolution` selector
 - **Integrated audio-video** — jointly generates video and synchronized audio in a single Transformer forward pass
 - **Fast** — ~10 seconds typical generation time
 
@@ -28,8 +29,8 @@ HappyHorse 1.0 is Alibaba's state-of-the-art AI video generation model, built by
 | Node | Description |
 |------|-------------|
 | 🔑 HappyHorse 1.0 API Key | Set your key once — wire to all nodes |
-| 🐎 HappyHorse 1.0 Text-to-Video | Generate native 1080p video from a text prompt |
-| 🐎 HappyHorse 1.0 Image-to-Video | Animate a start-frame image into 1080p video |
+| 🐎 HappyHorse 1.0 Text-to-Video | Generate 1080p / 720p video from a text prompt |
+| 🐎 HappyHorse 1.0 Image-to-Video | Animate a start-frame image into 1080p / 720p video |
 | 🐎 HappyHorse 1.0 Save Video | Download URL → disk + ComfyUI IMAGE frames |
 
 ---
@@ -71,7 +72,7 @@ Set your muapi.ai API key once and wire the output to all generation nodes. Alte
 
 ### 🐎 HappyHorse 1.0 Text-to-Video
 
-Generate a native 1080p HD video from a text prompt. HappyHorse 1.0 jointly generates synchronized audio with the video, so feel free to include sound cues (e.g. _"rain pattering on leaves"_, _"crowd cheering"_, _"piano melody drifting"_) right inside your prompt.
+Generate a HappyHorse 1.0 video from a text prompt. HappyHorse 1.0 jointly generates synchronized audio with the video, so feel free to include sound cues (e.g. _"rain pattering on leaves"_, _"crowd cheering"_, _"piano melody drifting"_) right inside your prompt.
 
 | Field | Values | Default |
 |-------|--------|---------|
@@ -79,16 +80,17 @@ Generate a native 1080p HD video from a text prompt. HappyHorse 1.0 jointly gene
 | `prompt` | Text describing the video (and any sound cues) | — |
 | `aspect_ratio` | `16:9` / `9:16` / `1:1` / `4:3` / `3:4` | `16:9` |
 | `duration` | Seconds, integer 4 – 15 | `5` |
+| `resolution` | `1080p` / `720p` (720p costs ~half) | `1080p` |
 
 **Outputs:** `video_url` · `first_frame` (IMAGE) · `request_id`
 
-**Endpoint:** `POST /api/v1/happy-horse-1-text-to-video-1080p`
+**Endpoint:** `POST /api/v1/happy-horse-1-text-to-video-{1080p|720p}` (selected from the `resolution` widget)
 
 ---
 
 ### 🐎 HappyHorse 1.0 Image-to-Video
 
-Animate a single start-frame image into a native 1080p HD video. The model animates outward from the supplied image; the prompt is optional and guides the motion.
+Animate a single start-frame image into a HappyHorse 1.0 video. The model animates outward from the supplied image; the prompt is optional and guides the motion.
 
 | Field | Values | Default |
 |-------|--------|---------|
@@ -98,12 +100,13 @@ Animate a single start-frame image into a native 1080p HD video. The model anima
 | `image_url` | Alternative to IMAGE input — direct URL of the start frame | — |
 | `aspect_ratio` | `16:9` / `9:16` / `1:1` / `4:3` / `3:4` | `16:9` |
 | `duration` | Seconds, integer 4 – 15 | `5` |
+| `resolution` | `1080p` / `720p` (720p costs ~half) | `1080p` |
 
 Provide **either** `image` **or** `image_url` (not both). Audio is generated jointly with the video — include sound cues in the prompt for richer output.
 
 **Outputs:** `video_url` · `first_frame` (IMAGE) · `request_id`
 
-**Endpoint:** `POST /api/v1/happy-horse-1-image-to-video-1080p`
+**Endpoint:** `POST /api/v1/happy-horse-1-image-to-video-{1080p|720p}` (selected from the `resolution` widget)
 
 ---
 
@@ -153,10 +156,12 @@ Load any `.json` file from this repo via **File → Load** in ComfyUI.
 
 This node pack uses the **muapi.ai** API under the hood:
 
-- **T2V:**    `POST https://api.muapi.ai/api/v1/happy-horse-1-text-to-video-1080p`
-- **I2V:**    `POST https://api.muapi.ai/api/v1/happy-horse-1-image-to-video-1080p`
-- **Poll:**   `GET  https://api.muapi.ai/api/v1/predictions/{request_id}/result`
-- **Upload:** `POST https://api.muapi.ai/api/v1/upload_file`
+- **T2V 1080p:** `POST https://api.muapi.ai/api/v1/happy-horse-1-text-to-video-1080p`
+- **T2V 720p:**  `POST https://api.muapi.ai/api/v1/happy-horse-1-text-to-video-720p`  *(~half the 1080p cost)*
+- **I2V 1080p:** `POST https://api.muapi.ai/api/v1/happy-horse-1-image-to-video-1080p`
+- **I2V 720p:**  `POST https://api.muapi.ai/api/v1/happy-horse-1-image-to-video-720p`  *(~half the 1080p cost)*
+- **Poll:**      `GET  https://api.muapi.ai/api/v1/predictions/{request_id}/result`
+- **Upload:**    `POST https://api.muapi.ai/api/v1/upload_file`
 
 Authentication is a single `x-api-key` header — no session tokens required.
 

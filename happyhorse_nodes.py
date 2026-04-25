@@ -3,8 +3,8 @@ MuAPI HappyHorse 1.0 ComfyUI Nodes
 =====================================
 Focused nodes for HappyHorse 1.0 video generation via muapi.ai.
 
-  HappyHorseTextToVideo   — POST /api/v1/happy-horse-1-text-to-video-1080p
-  HappyHorseImageToVideo  — POST /api/v1/happy-horse-1-image-to-video-1080p
+  HappyHorseTextToVideo   — POST /api/v1/happy-horse-1-text-to-video-{1080p|720p}
+  HappyHorseImageToVideo  — POST /api/v1/happy-horse-1-image-to-video-{1080p|720p}
 
 Auth:     x-api-key header
 Polling:  GET /api/v1/predictions/{request_id}/result
@@ -25,6 +25,7 @@ POLL_INTERVAL = 10
 MAX_WAIT = 900
 
 ASPECT_RATIOS = ["16:9", "9:16", "1:1", "4:3", "3:4"]
+RESOLUTIONS = ["1080p", "720p"]
 
 # ── Helpers ────────────────────────────────────────────────────────────────────
 
@@ -171,16 +172,17 @@ class HappyHorseApiKey:
 
 class HappyHorseTextToVideo:
     """
-    HappyHorse 1.0 Text-to-Video (native 1080p)
+    HappyHorse 1.0 Text-to-Video (1080p / 720p)
     ----------------------------------------------
-    Generate native 1080p HD video from a text prompt using Alibaba's
+    Generate HappyHorse 1.0 video from a text prompt using Alibaba's
     HappyHorse 1.0 model (Future Life Lab, Taotian Group).
 
-    Endpoint: POST /api/v1/happy-horse-1-text-to-video-1080p
+    Endpoints:
+      POST /api/v1/happy-horse-1-text-to-video-1080p   (native 1080p HD)
+      POST /api/v1/happy-horse-1-text-to-video-720p    (720p, ~half the cost)
 
     Aspect ratios: 16:9 | 9:16 | 1:1 | 4:3 | 3:4
     Duration:      4–15 seconds
-    Output:        always native 1080p HD (no upscaling)
 
     NOTE: HappyHorse 1.0 is currently in closed beta on muapi.ai. API-key
     access returns 403 until GA; Pro/Business plan users can try it today
@@ -195,6 +197,8 @@ class HappyHorseTextToVideo:
             "duration": ("INT", {"default": 5, "min": 4, "max": 15, "step": 1,
                 "tooltip": "Video duration in seconds (4–15)"}),
         }, "optional": {
+            "resolution": (RESOLUTIONS, {"default": "1080p",
+                "tooltip": "Output resolution. 720p costs ~half of 1080p."}),
             "api_key": ("STRING", {"multiline": False, "default": ""}),
         }}
     RETURN_TYPES = ("STRING", "IMAGE", "STRING")
@@ -202,15 +206,16 @@ class HappyHorseTextToVideo:
     FUNCTION = "run"
     CATEGORY = "🐎 HappyHorse 1.0"
 
-    def run(self, prompt, aspect_ratio, duration, api_key=""):
+    def run(self, prompt, aspect_ratio, duration, resolution="1080p", api_key=""):
         api_key = _load_api_key(api_key)
         payload = {
             "prompt": prompt,
             "aspect_ratio": aspect_ratio,
             "duration": int(duration),
         }
-        print("[HappyHorse T2V] Submitting...")
-        rid = _submit(api_key, "happy-horse-1-text-to-video-1080p", payload)
+        endpoint = f"happy-horse-1-text-to-video-{resolution}"
+        print(f"[HappyHorse T2V] Submitting ({resolution})...")
+        rid = _submit(api_key, endpoint, payload)
         result = _poll(api_key, rid)
         url = _output_url(result)
         print(f"[HappyHorse T2V] Done → {url}")
@@ -219,18 +224,19 @@ class HappyHorseTextToVideo:
 
 class HappyHorseImageToVideo:
     """
-    HappyHorse 1.0 Image-to-Video (native 1080p)
+    HappyHorse 1.0 Image-to-Video (1080p / 720p)
     -----------------------------------------------
-    Animate a single start-frame image into a native 1080p HD video.
+    Animate a single start-frame image into a HappyHorse 1.0 video.
 
-    Endpoint: POST /api/v1/happy-horse-1-image-to-video-1080p
+    Endpoints:
+      POST /api/v1/happy-horse-1-image-to-video-1080p
+      POST /api/v1/happy-horse-1-image-to-video-720p   (~half the cost)
 
     Provide either an IMAGE input (auto-uploaded) or a direct image_url.
     The video animates outward from this start frame.
 
     Aspect ratios: 16:9 | 9:16 | 1:1 | 4:3 | 3:4
     Duration:      4–15 seconds
-    Output:        always native 1080p HD
     """
     @classmethod
     def INPUT_TYPES(cls):
@@ -239,6 +245,8 @@ class HappyHorseImageToVideo:
             "duration": ("INT", {"default": 5, "min": 4, "max": 15, "step": 1,
                 "tooltip": "Video duration in seconds (4–15)"}),
         }, "optional": {
+            "resolution": (RESOLUTIONS, {"default": "1080p",
+                "tooltip": "Output resolution. 720p costs ~half of 1080p."}),
             "api_key": ("STRING", {"multiline": False, "default": ""}),
             "prompt": ("STRING", {"multiline": True, "default": "",
                 "tooltip": "Optional text prompt guiding the motion"}),
@@ -251,7 +259,7 @@ class HappyHorseImageToVideo:
     FUNCTION = "run"
     CATEGORY = "🐎 HappyHorse 1.0"
 
-    def run(self, aspect_ratio, duration, api_key="", prompt="", image=None, image_url=""):
+    def run(self, aspect_ratio, duration, resolution="1080p", api_key="", prompt="", image=None, image_url=""):
         api_key = _load_api_key(api_key)
 
         if image is not None:
@@ -268,8 +276,9 @@ class HappyHorseImageToVideo:
             "aspect_ratio": aspect_ratio,
             "duration": int(duration),
         }
-        print("[HappyHorse I2V] Submitting...")
-        rid = _submit(api_key, "happy-horse-1-image-to-video-1080p", payload)
+        endpoint = f"happy-horse-1-image-to-video-{resolution}"
+        print(f"[HappyHorse I2V] Submitting ({resolution})...")
+        rid = _submit(api_key, endpoint, payload)
         result = _poll(api_key, rid)
         url = _output_url(result)
         print(f"[HappyHorse I2V] Done → {url}")
