@@ -20,8 +20,6 @@ HappyHorse 1.0 is Alibaba's state-of-the-art AI video generation model, built by
 - **Integrated audio-video** — jointly generates video and synchronized audio in a single Transformer forward pass
 - **Fast** — ~10 seconds typical generation time
 
-> ⚠️  **Closed beta.** HappyHorse 1.0 on muapi.ai is currently in playground beta for **Pro and Business plan** users. Direct API-key access returns `403` until GA. The nodes in this pack will hit the same endpoints once access opens up.
-
 ---
 
 ## Nodes
