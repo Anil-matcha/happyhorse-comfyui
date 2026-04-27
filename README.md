@@ -51,7 +51,7 @@ pip install -r happyhorse-comfyui/requirements.txt
 
 ## Quick Start
 
-1. Sign up at [muapi.ai](https://muapi.ai) and grab a key from **Dashboard → API Keys → Create Key** (Pro/Business plan required during beta).
+1. Sign up at [muapi.ai](https://muapi.ai) and grab a key from **Dashboard → API Keys → Create Key** .
 2. Right-click the ComfyUI canvas → **Add Node** → **🐎 HappyHorse 1.0**.
 3. Add a **🔑 HappyHorse 1.0 API Key** node, paste your key, and wire its output into any generation node.
 4. Write a prompt and hit **Queue Prompt**.
