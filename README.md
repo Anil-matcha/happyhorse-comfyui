@@ -17,6 +17,8 @@ HappyHorse 1.0 is Alibaba's state-of-the-art AI video generation model, built by
 - **#1 Ranked** — 1333 Elo T2V, 1392 Elo I2V
 - **Native 1080p HD** — full HD output without upscaling, powered by a 15B-parameter 40-layer Transformer
 - **720p option** — same model, ~half the cost, available on every node via the `resolution` selector
+- **Multi-image reference-to-video** — condition generation on 1–9 reference images for consistent characters, styles and environments
+- **Natural-language video editing** — restyle, replace skies, swap subjects on an existing clip; keep or regenerate the audio track
 - **Integrated audio-video** — jointly generates video and synchronized audio in a single Transformer forward pass
 - **Fast** — ~10 seconds typical generation time
 
@@ -29,6 +31,8 @@ HappyHorse 1.0 is Alibaba's state-of-the-art AI video generation model, built by
 | 🔑 HappyHorse 1.0 API Key | Set your key once — wire to all nodes |
 | 🐎 HappyHorse 1.0 Text-to-Video | Generate 1080p / 720p video from a text prompt |
 | 🐎 HappyHorse 1.0 Image-to-Video | Animate a start-frame image into 1080p / 720p video |
+| 🐎 HappyHorse 1.0 Reference-to-Video | Generate 1080p / 720p video from a prompt + 1–9 reference images |
+| 🐎 HappyHorse 1.0 Video Edit | Edit an existing video with a natural-language instruction (+ optional 0–5 reference images, audio passthrough) |
 | 🐎 HappyHorse 1.0 Save Video | Download URL → disk + ComfyUI IMAGE frames |
 
 ---
@@ -108,6 +112,52 @@ Provide **either** `image` **or** `image_url` (not both). Audio is generated joi
 
 ---
 
+### 🐎 HappyHorse 1.0 Reference-to-Video
+
+Generate a HappyHorse 1.0 video from a text prompt + **1–9 reference images** (style, subject, environment). Different from Image-to-Video, which uses a single image as the start frame: every reference here is treated as a *look/character/scene reference* the model should internalize.
+
+| Field | Values | Default |
+|-------|--------|---------|
+| `api_key` | Optional | — |
+| `prompt` | Text describing the desired video | — |
+| `aspect_ratio` | `16:9` / `9:16` / `1:1` / `4:3` / `3:4` | `16:9` |
+| `duration` | Seconds, integer 4 – 15 | `5` |
+| `resolution` | `1080p` / `720p` (720p costs ~half) | `1080p` |
+| `image_urls` | Multi-line textbox: newline- or comma-separated reference image URLs | — |
+| `image_1` … `image_4` | Optional ComfyUI IMAGE inputs (auto-uploaded) | — |
+| `seed` | Integer; `0` = unset, otherwise reproducibility seed | `0` |
+
+You can mix and match: any combination of `image_urls` + `image_1`/`image_2`/`image_3`/`image_4` is concatenated. The combined list must be **1–9 URLs**. Image specs: JPEG / PNG / WEBP, ≥400 px shortest side, ≤10 MB each.
+
+**Outputs:** `video_url` · `first_frame` (IMAGE) · `request_id`
+
+**Endpoint:** `POST /api/v1/happy-horse-1-reference-to-video-{1080p|720p}` (selected from the `resolution` widget)
+
+---
+
+### 🐎 HappyHorse 1.0 Video Edit
+
+Edit an existing video using a natural-language instruction. Optionally supply 0–5 reference images to anchor characters, styles, or elements that should appear in the edited output. Audio can be regenerated to match the edit (`audio_setting=auto`) or kept from the source (`audio_setting=origin`).
+
+| Field | Values | Default |
+|-------|--------|---------|
+| `api_key` | Optional | — |
+| `prompt` | Edit instruction (what should change) | — |
+| `video_url` | Source video URL (MP4 or MOV) | — |
+| `resolution` | `1080p` / `720p` (720p costs ~half) | `1080p` |
+| `audio_setting` | `auto` (regenerate) / `origin` (keep source audio) | `auto` |
+| `image_urls` | Optional multi-line textbox of 0–5 reference image URLs | — |
+| `image_1` … `image_3` | Optional ComfyUI IMAGE inputs (auto-uploaded) | — |
+| `seed` | Integer; `0` = unset, otherwise reproducibility seed | `0` |
+
+Source video specs: MP4 or MOV (H.264 recommended), 3 – 60 s, ≤100 MB, longer side ≤2160 px, shorter side ≥320 px, frame rate >8 fps. Reference images: JPEG / PNG / WEBP, ≥300 px each side, ≤10 MB each.
+
+**Outputs:** `video_url` · `first_frame` (IMAGE) · `request_id`
+
+**Endpoint:** `POST /api/v1/happy-horse-1-video-edit-{1080p|720p}` (selected from the `resolution` widget)
+
+---
+
 ### 🐎 HappyHorse 1.0 Save Video
 
 Downloads the generated video to ComfyUI's output folder and returns all frames as an IMAGE tensor for use with other nodes (preview, VHS, upscale, etc.).
@@ -133,6 +183,8 @@ Load any `.json` file from this repo via **File → Load** in ComfyUI.
 |------|-------------|
 | `HappyHorse_T2V_Example.json` | Basic text-to-video generation |
 | `HappyHorse_I2V_Example.json` | Image-to-video animation |
+| `HappyHorse_Ref2V_Example.json` | Reference-to-video — prompt + multiple reference images |
+| `HappyHorse_VideoEdit_Example.json` | Video edit — natural-language edit on a source video URL |
 
 **Text-to-Video:**
 ```
@@ -148,18 +200,36 @@ Load any `.json` file from this repo via **File → Load** in ComfyUI.
 [LoadImage] → [🐎 Image-to-Video] → video_url → [🐎 Save Video] → frames → [Preview Image]
 ```
 
+**Reference-to-Video:**
+```
+[🔑 API Key] ──────────────────────────────────────────────────────────────┐
+                                                                            ↓
+[LoadImage × N] → [🐎 Reference-to-Video] → video_url → [🐎 Save Video] → frames → [Preview Image]
+```
+
+**Video Edit:**
+```
+[🔑 API Key] ──────────────────────────────────────────────┐
+                                                            ↓
+(video_url string) → [🐎 Video Edit] → video_url → [🐎 Save Video] → frames → [Preview Image]
+```
+
 ---
 
 ## API
 
 This node pack uses the **muapi.ai** API under the hood:
 
-- **T2V 1080p:** `POST https://api.muapi.ai/api/v1/happy-horse-1-text-to-video-1080p`
-- **T2V 720p:**  `POST https://api.muapi.ai/api/v1/happy-horse-1-text-to-video-720p`  *(~half the 1080p cost)*
-- **I2V 1080p:** `POST https://api.muapi.ai/api/v1/happy-horse-1-image-to-video-1080p`
-- **I2V 720p:**  `POST https://api.muapi.ai/api/v1/happy-horse-1-image-to-video-720p`  *(~half the 1080p cost)*
-- **Poll:**      `GET  https://api.muapi.ai/api/v1/predictions/{request_id}/result`
-- **Upload:**    `POST https://api.muapi.ai/api/v1/upload_file`
+- **T2V 1080p:**         `POST https://api.muapi.ai/api/v1/happy-horse-1-text-to-video-1080p`
+- **T2V 720p:**          `POST https://api.muapi.ai/api/v1/happy-horse-1-text-to-video-720p`  *(~half the 1080p cost)*
+- **I2V 1080p:**         `POST https://api.muapi.ai/api/v1/happy-horse-1-image-to-video-1080p`
+- **I2V 720p:**          `POST https://api.muapi.ai/api/v1/happy-horse-1-image-to-video-720p`  *(~half the 1080p cost)*
+- **Ref2V 1080p:**       `POST https://api.muapi.ai/api/v1/happy-horse-1-reference-to-video-1080p`
+- **Ref2V 720p:**        `POST https://api.muapi.ai/api/v1/happy-horse-1-reference-to-video-720p`  *(~half the 1080p cost)*
+- **Video Edit 1080p:**  `POST https://api.muapi.ai/api/v1/happy-horse-1-video-edit-1080p`
+- **Video Edit 720p:**   `POST https://api.muapi.ai/api/v1/happy-horse-1-video-edit-720p`  *(~half the 1080p cost)*
+- **Poll:**              `GET  https://api.muapi.ai/api/v1/predictions/{request_id}/result`
+- **Upload:**            `POST https://api.muapi.ai/api/v1/upload_file`
 
 Authentication is a single `x-api-key` header — no session tokens required.
 
